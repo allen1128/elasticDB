@@ -1,5 +1,5 @@
 diff --git a/build.xml b/build.xml
-index cdb54da..d939263 100644
+index cdb54da..a4d581d 100644
 --- a/build.xml
 +++ b/build.xml
 @@ -73,11 +73,6 @@
@@ -23,6 +23,15 @@ index cdb54da..d939263 100644
  		<war destfile="${distDir}/tpcw.war" webxml="tpcw.xml">
  			<classes dir="${buildServDir}"/>	
  			<lib file="${cpJDBC}"/>
+@@ -199,7 +194,7 @@
+ 	</target>
+ 	
+ 	<!-- Image generation -->
+-	<target name="genimg" depends="dist" description="Generate the images for the items.">
++	<target name="genimg" description="Generate the images for the items.">
+ 		<copy todir="${imagesDir}">
+ 			<fileset dir="${tpcwDir}/images" casesensitive="yes">
+   				<include name="**/*.gif"/>
 diff --git a/main.properties b/main.properties
 index d34127b..6875cf6 100644
 --- a/main.properties
