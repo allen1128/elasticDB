@@ -24,7 +24,7 @@ public class EventQueue {
 		switch (actionType) {
 		case BadPerformanceAddServer:
 		case GoodPerformanceRemoveServer:
-			// we ignore the performance request if there is anything going on
+			// we ignore the performance request if there is anything else going on
 			// in the queue
 			if (queue.isEmpty()) {
 				queue.offer(actionType);

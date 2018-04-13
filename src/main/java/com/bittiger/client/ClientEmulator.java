@@ -28,20 +28,37 @@ public class ClientEmulator {
 	// receives other command line parameters than options
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
-
-	private TPCWProperties tpcw = null;
-	private int numOfRunningThreads = 0;
 	private boolean endOfSimulation = false;
+	private long startTime;
+	
+	/**
+	 * The tpcw configurations
+	 */
+	private TPCWProperties tpcw = null;
+	
+	/**
+	 * The monitor to collect metrics
+	 */
 	private Monitor monitor;
+	
+	/**
+	 * The controller that implements control logic
+	 */
 	private Controller controller;
+	
+	/**
+	 * The executor that executes commands
+	 */
 	private Executor executor;
+	
+	/**
+	 * The loadbalancer that is used to distribute load
+	 */
 	private LoadBalancer loadBalancer;
 	OpenSystemTicketProducer producer;
 	EventQueue eventQueue = null;
-	private long startTime;
 
-	private static transient final Logger LOG = LoggerFactory
-			.getLogger(ClientEmulator.class);
+	private static transient final Logger LOG = LoggerFactory.getLogger(ClientEmulator.class);
 
 	public ClientEmulator() throws IOException, InterruptedException {
 		super();
@@ -49,14 +66,9 @@ public class ClientEmulator {
 		eventQueue = new EventQueue();
 	}
 
-	public synchronized void increaseThread() {
-		numOfRunningThreads++;
-	}
-
 	private synchronized void setEndOfSimulation() {
 		endOfSimulation = true;
-		LOG.info("Trigger ClientEmulator.isEndOfSimulation()= "
-				+ this.isEndOfSimulation());
+		LOG.info("Trigger ClientEmulator.isEndOfSimulation()= " + this.isEndOfSimulation());
 
 	}
 
@@ -89,7 +101,20 @@ public class ClientEmulator {
 		long warmup = tpcw.warmup;
 		long mi = tpcw.mi;
 		long warmdown = tpcw.warmdown;
-		this.startTime = System.currentTimeMillis();
+		
+		Timer timer = null;
+		if (enableController) {
+			this.controller = new Controller(this);
+			timer = new Timer();
+			timer.schedule(this.controller, warmup, tpcw.interval);
+			this.executor = new Executor(this);
+			this.executor.start();
+			if (enableDestroyer) {
+				destroyer = new Destroyer(this);
+				destroyer.start();
+			}
+		}
+		
 		int maxNumSessions = 0;
 		int workloads[] = tpcw.workloads;
 		for (int i = 0; i < workloads.length; i++) {
@@ -112,16 +137,13 @@ public class ClientEmulator {
 		int currWLInx = 0;
 		int diffWL = 0;
 
-		long endTime = startTime + warmup + mi + warmdown;
-		long currTime;
-
 		// producer is for semi-open and open models
 		// it shares a bQueue with all the usersessions.
 		if (tpcw.mixRate > 0) {
 			producer = new OpenSystemTicketProducer(this, bQueue);
 			producer.start();
 		}
-		
+
 		this.monitor = new Monitor(this);
 		this.monitor.init();
 		Timer timer = null;
@@ -134,6 +156,9 @@ public class ClientEmulator {
 		}
 		this.loadBalancer = new LoadBalancer(this);
 		LOG.info("Client starts......");
+		this.startTime = System.currentTimeMillis();
+		long endTime = startTime + warmup + mi + warmdown;
+		long currTime;
 		while (true) {
 			currTime = System.currentTimeMillis();
 			if (currTime >= endTime) {
@@ -162,6 +187,21 @@ public class ClientEmulator {
 			currWLInx = ((currWLInx + 1) % workloads.length);
 		}
 		setEndOfSimulation();
+		if (enableController) {
+			timer.cancel();
+			this.eventQueue.put(ActionType.NoOp);
+			try {
+				executor.join();
+				LOG.info("Executor joins");
+				if (enableDestroyer) {
+					destroyer.join();
+					LOG.info("Destroyer joins");
+				}
+			} catch (java.lang.InterruptedException ie) {
+				LOG.error("Executor/Destroyer has been interrupted.");
+			}
+		}
+		this.monitor.close();
 		for (int i = 0; i < maxNumSessions; i++) {
 			sessions[i].releaseThread();
 			sessions[i].notifyThread();
@@ -172,8 +212,7 @@ public class ClientEmulator {
 				LOG.info("UserSession " + i + " joins.");
 				sessions[i].join();
 			} catch (java.lang.InterruptedException ie) {
-				LOG.error("ClientEmulator: Thread " + i
-						+ " has been interrupted.");
+				LOG.error("ClientEmulator: Thread " + i + " has been interrupted.");
 			}
 		}
 		if (tpcw.mixRate > 0) {
@@ -247,8 +286,7 @@ public class ClientEmulator {
 		this.eventQueue = eventQueue;
 	}
 
-	public static void main(String[] args) throws IOException,
-			InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		ClientEmulator client = new ClientEmulator();
 		client.start(args);
 	}

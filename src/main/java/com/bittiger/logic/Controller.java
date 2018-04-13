@@ -14,8 +14,7 @@ import com.bittiger.logic.rules.ScaleOutRule;
 
 public class Controller extends TimerTask {
 	private ClientEmulator c;
-	private static transient final Logger LOG = LoggerFactory
-			.getLogger(Controller.class);
+	private static transient final Logger LOG = LoggerFactory.getLogger(Controller.class);
 
 	public Controller(ClientEmulator ce) {
 		this.c = ce;
@@ -25,17 +24,20 @@ public class Controller extends TimerTask {
 		Date date = new Date();
 		LOG.info("Controller is running at " + date.toString());
 		String perf = c.getMonitor().readPerformance();
-		/**
-		 * Create a rules engine and register the business rule
-		 */
-		RulesEngine rulesEngine = RulesEngineBuilder.aNewRulesEngine().build();
-		ScaleOutRule scaleOutRule = new ScaleOutRule();
-		scaleOutRule.setInput(c, perf);
-		ScaleInRule scaleInRule = new ScaleInRule();
-		scaleInRule.setInput(c, perf);
-		rulesEngine.registerRule(scaleOutRule);
-		rulesEngine.registerRule(scaleInRule);
-		rulesEngine.fireRules();
+		if (perf != null) {
+			/**
+			 * Create a rules engine and register the business rule
+			 */
+			RulesEngine rulesEngine = RulesEngineBuilder.aNewRulesEngine().build();
+			ScaleOutRule scaleOutRule = new ScaleOutRule();
+			scaleOutRule.setInput(c, perf);
+			ScaleInRule scaleInRule = new ScaleInRule();
+			scaleInRule.setInput(c, perf);
+			rulesEngine.registerRule(scaleOutRule);
+			rulesEngine.registerRule(scaleInRule);
+			rulesEngine.fireRules();
+		}
+
 	}
 
 }

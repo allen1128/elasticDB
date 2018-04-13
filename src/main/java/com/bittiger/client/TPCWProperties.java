@@ -39,16 +39,14 @@ public class TPCWProperties {
 	public int destroyerSleepInterval;
 	public String destroyTarget;
 
-	private static transient final Logger LOG = LoggerFactory
-			.getLogger(TPCWProperties.class);
+	private static transient final Logger LOG = LoggerFactory.getLogger(TPCWProperties.class);
 
 	public TPCWProperties(String fileName) {
 		try {
 			configuration = ResourceBundle.getBundle(fileName);
 			checkPropertiesFileAndGetURLGenerator();
 		} catch (java.util.MissingResourceException e) {
-			System.err
-					.println("No properties file has been found in your classpath.<p>");
+			System.err.println("No properties file has been found in your classpath.<p>");
 			Runtime.getRuntime().exit(1);
 		}
 	}
@@ -77,8 +75,7 @@ public class TPCWProperties {
 			}
 			// LOG.info("rate is " + Arrays.toString(rate));
 
-			StringTokenizer wl = new StringTokenizer(
-					getProperty("workload_vector"), ",");
+			StringTokenizer wl = new StringTokenizer(getProperty("workload_vector"), ",");
 			workloads = new int[wl.countTokens()];
 			int wlCnt = 0;
 			while (wl.hasMoreTokens()) {
@@ -114,12 +111,10 @@ public class TPCWProperties {
 
 			loadPropertyFromSetEnv();
 
-			destroyerSleepInterval = Integer
-					.parseInt(getProperty("destroyerSleepInterval"));
+			destroyerSleepInterval = Integer.parseInt(getProperty("destroyerSleepInterval"));
 			LOG.info("destroyerSleepInterval is " + destroyerSleepInterval);
 		} catch (Exception e) {
-			System.err.println("Error while checking properties: "
-					+ e.getMessage());
+			System.err.println("Error while checking properties: " + e.getMessage());
 			Runtime.getRuntime().exit(0);
 		}
 	}
@@ -167,7 +162,7 @@ public class TPCWProperties {
 				readQueue[i + 1] = slaves[i];
 			}
 			LOG.info("readQueue is " + Arrays.toString(readQueue));
-			
+
 			candidateQueue = processServer(prop.getProperty("CANDIDATE"));
 			LOG.info("candidateQueue is " + Arrays.toString(candidateQueue));
 

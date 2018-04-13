@@ -24,11 +24,9 @@ public class UserSession extends Thread {
 
 	private Connection writeConn;
 
-	private static transient final Logger LOG = LoggerFactory
-			.getLogger(UserSession.class);
+	private static transient final Logger LOG = LoggerFactory.getLogger(UserSession.class);
 
-	public UserSession(int id, ClientEmulator client,
-			BlockingQueue<Integer> bQueue) {
+	public UserSession(int id, ClientEmulator client, BlockingQueue<Integer> bQueue) {
 		super("UserSession" + id);
 		this.id = id;
 		this.queue = bQueue;
@@ -104,8 +102,7 @@ public class UserSession extends Thread {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			// DriverManager.setLoginTimeout(5);
 			server = loadBalancer.getWriteQueue();
-			connection = (Connection) DriverManager.getConnection(
-					Utilities.getUrl(server), client.getTpcw().username,
+			connection = (Connection) DriverManager.getConnection(Utilities.getUrl(server), client.getTpcw().username,
 					client.getTpcw().password);
 			connection.setAutoCommit(true);
 		} catch (Exception e) {
@@ -145,12 +142,10 @@ public class UserSession extends Thread {
 					Thread.sleep((long) ((float) TPCWthinkTime(tpcw.TPCmean)));
 				}
 
-				String queryclass = computeNextSql(tpcw.rwratio, tpcw.read,
-						tpcw.write);
+				String queryclass = computeNextSql(tpcw.rwratio, tpcw.read, tpcw.write);
 				Connection connection = getNextConnection(queryclass);
 				String classname = "com.bittiger.querypool." + queryclass;
-				QueryMetaData query = (QueryMetaData) Class.forName(classname)
-						.newInstance();
+				QueryMetaData query = (QueryMetaData) Class.forName(classname).newInstance();
 				String command = query.getQueryStr();
 
 				Statement stmt = connection.createStatement();
@@ -158,16 +153,14 @@ public class UserSession extends Thread {
 					long start = System.currentTimeMillis();
 					stmt.executeQuery(command);
 					long end = System.currentTimeMillis();
-					client.getMonitor().addQuery(this.id, queryclass, start,
-							end);
+					client.getMonitor().addQuery(this.id, queryclass, start, end);
 					stmt.close();
 					connection.close();
 				} else {
 					long start = System.currentTimeMillis();
 					stmt.executeUpdate(command);
 					long end = System.currentTimeMillis();
-					client.getMonitor().addQuery(this.id, queryclass, start,
-							end);
+					client.getMonitor().addQuery(this.id, queryclass, start, end);
 					stmt.close();
 				}
 			} catch (Exception ex) {
@@ -181,6 +174,5 @@ public class UserSession extends Thread {
 		} catch (SQLException ex) {
 			LOG.error("Error while close connection " + ex.getMessage());
 		}
-		client.increaseThread();
 	}
 }

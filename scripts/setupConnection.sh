@@ -14,6 +14,11 @@ echo "CURRENT_HOME is set to $CURRENT_HOME"
 
 source $CURRENT_HOME/set_env.sh
 
+if [ -z ${MASTER+x} ]; then
+echo "ERROR: MASTER SLAVE etc are NOT set. Please check set_env.sh"
+exit 1
+fi
+
 TPCW_HOME=$CURRENT_HOME/../tpcw
 
 TPCW_HOME="$( cd "$TPCW_HOME" && pwd )"

@@ -5,9 +5,7 @@ import org.easyrules.annotation.Condition;
 import org.easyrules.annotation.Rule;
 
 import com.bittiger.client.ClientEmulator;
-import com.bittiger.client.Utilities;
 import com.bittiger.logic.ActionType;
-import com.bittiger.logic.Controller;
 
 @Rule(name = "ScaleOutRule", description = "Check if we need to add server for better performance")
 public class ScaleOutRule {
