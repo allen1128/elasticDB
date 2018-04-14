@@ -102,19 +102,6 @@ public class ClientEmulator {
 		long mi = tpcw.mi;
 		long warmdown = tpcw.warmdown;
 		
-		Timer timer = null;
-		if (enableController) {
-			this.controller = new Controller(this);
-			timer = new Timer();
-			timer.schedule(this.controller, warmup, tpcw.interval);
-			this.executor = new Executor(this);
-			this.executor.start();
-			if (enableDestroyer) {
-				destroyer = new Destroyer(this);
-				destroyer.start();
-			}
-		}
-		
 		int maxNumSessions = 0;
 		int workloads[] = tpcw.workloads;
 		for (int i = 0; i < workloads.length; i++) {
@@ -189,19 +176,13 @@ public class ClientEmulator {
 		setEndOfSimulation();
 		if (enableController) {
 			timer.cancel();
-			this.eventQueue.put(ActionType.NoOp);
 			try {
 				executor.join();
 				LOG.info("Executor joins");
-				if (enableDestroyer) {
-					destroyer.join();
-					LOG.info("Destroyer joins");
-				}
 			} catch (java.lang.InterruptedException ie) {
 				LOG.error("Executor/Destroyer has been interrupted.");
 			}
 		}
-		this.monitor.close();
 		for (int i = 0; i < maxNumSessions; i++) {
 			sessions[i].releaseThread();
 			sessions[i].notifyThread();
@@ -221,16 +202,6 @@ public class ClientEmulator {
 				LOG.info("Producer joins");
 			} catch (java.lang.InterruptedException ie) {
 				LOG.error("Producer has been interrupted.");
-			}
-		}
-		if (enableController) {
-			timer.cancel();
-			this.eventQueue.put(ActionType.NoOp);
-			try {
-				executor.join();
-				LOG.info("Executor joins");
-			} catch (java.lang.InterruptedException ie) {
-				LOG.error("Executor/Destroyer has been interrupted.");
 			}
 		}
 		this.monitor.close();

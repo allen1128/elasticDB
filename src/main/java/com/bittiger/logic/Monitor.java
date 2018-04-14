@@ -51,19 +51,21 @@ public class Monitor {
 		}
 	}
 
-	private void updateStats(double x, double u, double r, double w, double m) {
+	private synchronized void updateStats(double x, double u, double r, double w, double m) {
 		try {
-			Statement stmt = con.createStatement();
-			StatsQuery stats = new StatsQuery(x, u, r, w, m);
-			stmt.executeUpdate(stats.getQueryStr());
-			stmt.close();
-			LOG.info("Stats: Interval:" + x + ", Queries:" + u + ", Read:" + r + ", Write:" + w + ", Nodes:" + m);
+			if (!con.isClosed()) {
+				Statement stmt = con.createStatement();
+				StatsQuery stats = new StatsQuery(x, u, r, w, m);
+				stmt.executeUpdate(stats.getQueryStr());
+				stmt.close();
+				LOG.info("Stats: Interval:" + x + ", Queries:" + u + ", Read:" + r + ", Write:" + w + ", Nodes:" + m);
+			}
 		} catch (Exception e) {
 			LOG.error(e.toString());
 		}
 	}
 
-	public void close() {
+	public synchronized void close() {
 		try {
 			con.close();
 		} catch (Exception e) {

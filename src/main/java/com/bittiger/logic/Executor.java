@@ -49,7 +49,7 @@ public class Executor extends Thread {
 						Utilities.scaleOut(source.getIp(), target.getIp(),
 								master.getIp());
 						c.getLoadBalancer().addServer(target);
-						LOG.info("kick in server " + target.getIp() + " done ");
+						LOG.info("Kick in server " + target.getIp() + " done ");
 					}
 				} else if (actionType == ActionType.GoodPerformanceRemoveServer) {
 					if (c.getLoadBalancer().getReadQueue().size() == Utilities.minimumSlave) {
