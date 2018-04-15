@@ -30,6 +30,9 @@ public class EventQueue {
 				queue.offer(actionType);
 			}
 			break;
+		case NoOp:
+			queue.offer(actionType);
+			break;
 		default:
 			break;
 		}

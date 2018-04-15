@@ -177,6 +177,7 @@ public class ClientEmulator {
 		if (enableController) {
 			timer.cancel();
 			try {
+				this.eventQueue.put(ActionType.NoOp);
 				executor.join();
 				LOG.info("Executor joins");
 			} catch (java.lang.InterruptedException ie) {
