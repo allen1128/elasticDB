@@ -205,7 +205,6 @@ public class ClientEmulator {
 				LOG.error("Producer has been interrupted.");
 			}
 		}
-		this.monitor.close();
 		LOG.info("Done\n");
 		Runtime.getRuntime().exit(0);
 	}

@@ -22,8 +22,6 @@ public class UserSession extends Thread {
 	private BlockingQueue<Integer> queue;
 	private int id;
 
-	private Connection writeConn;
-
 	private static transient final Logger LOG = LoggerFactory.getLogger(UserSession.class);
 
 	public UserSession(int id, ClientEmulator client, BlockingQueue<Integer> bQueue) {
@@ -88,10 +86,7 @@ public class UserSession extends Thread {
 		if (sql.contains("b")) {
 			return getNextReadConnection(client.getLoadBalancer());
 		} else {
-			if (writeConn == null) {
-				writeConn = getNextWriteConnection(client.getLoadBalancer());
-			}
-			return writeConn;
+			return getNextWriteConnection(client.getLoadBalancer());
 		}
 	}
 
@@ -141,38 +136,46 @@ public class UserSession extends Thread {
 				} else {
 					Thread.sleep((long) ((float) TPCWthinkTime(tpcw.TPCmean)));
 				}
+			} catch (Exception ex) {
+				LOG.error("Error while running session: " + ex.getMessage());
+			}
 
-				String queryclass = computeNextSql(tpcw.rwratio, tpcw.read, tpcw.write);
-				Connection connection = getNextConnection(queryclass);
+			String queryclass = computeNextSql(tpcw.rwratio, tpcw.read, tpcw.write);
+			Connection connection = null;
+			Statement stmt = null;
+			try {
+				connection = getNextConnection(queryclass);
 				String classname = "com.bittiger.querypool." + queryclass;
 				QueryMetaData query = (QueryMetaData) Class.forName(classname).newInstance();
 				String command = query.getQueryStr();
-
-				Statement stmt = connection.createStatement();
+				stmt = connection.createStatement();
 				if (queryclass.contains("b")) {
 					long start = System.currentTimeMillis();
 					stmt.executeQuery(command);
 					long end = System.currentTimeMillis();
 					client.getMonitor().addQuery(this.id, queryclass, start, end);
-					stmt.close();
-					connection.close();
 				} else {
 					long start = System.currentTimeMillis();
 					stmt.executeUpdate(command);
 					long end = System.currentTimeMillis();
 					client.getMonitor().addQuery(this.id, queryclass, start, end);
-					stmt.close();
 				}
 			} catch (Exception ex) {
-				LOG.error("Error while running session: " + ex.getMessage());
+				LOG.error("Error while executing query: " + ex.getMessage());
+			} finally {
+				if (stmt != null)
+					try {
+						stmt.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				if (connection != null)
+					try {
+						connection.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
 			}
-		}
-		try {
-			if (writeConn != null) {
-				writeConn.close();
-			}
-		} catch (SQLException ex) {
-			LOG.error("Error while close connection " + ex.getMessage());
 		}
 	}
 }

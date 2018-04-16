@@ -2,6 +2,7 @@ package com.bittiger.logic;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 
@@ -18,7 +19,6 @@ public class Monitor {
 	public final Vector<Stats> read;
 	public final Vector<Stats> write;
 	private ClientEmulator c;
-	Connection con;
 	private int seq = 0;
 	private int rPos = 0;
 	private int wPos = 0;
@@ -32,44 +32,62 @@ public class Monitor {
 	}
 
 	public void init() {
+		Connection connection = null;
+		Statement stmt = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			con = DriverManager.getConnection(Utilities.getStatsUrl(c.getTpcw().writeQueue), c.getTpcw().username,
-					c.getTpcw().password);
-			con.setAutoCommit(true);
-			try {
-				Statement stmt = con.createStatement();
-				CleanStatsQuery clean = new CleanStatsQuery();
-				stmt.executeUpdate(clean.getQueryStr());
-				stmt.close();
-				LOG.info("Clean stats at server " + c.getTpcw().writeQueue);
-			} catch (Exception e) {
-				LOG.error(e.toString());
-			}
+			connection = DriverManager.getConnection(Utilities.getStatsUrl(c.getTpcw().writeQueue),
+					c.getTpcw().username, c.getTpcw().password);
+			connection.setAutoCommit(true);
+			stmt = connection.createStatement();
+			CleanStatsQuery clean = new CleanStatsQuery();
+			stmt.executeUpdate(clean.getQueryStr());
+			LOG.info("Clean stats at server " + c.getTpcw().writeQueue);
 		} catch (Exception e) {
 			LOG.error(e.toString());
+		} finally {
+			if (stmt != null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			if (connection != null)
+				try {
+					connection.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
 		}
 	}
 
-	private synchronized void updateStats(double x, double u, double r, double w, double m) {
+	private void updateStats(double x, double u, double r, double w, double m) {
+		Connection connection = null;
+		Statement stmt = null;
 		try {
-			if (!con.isClosed()) {
-				Statement stmt = con.createStatement();
-				StatsQuery stats = new StatsQuery(x, u, r, w, m);
-				stmt.executeUpdate(stats.getQueryStr());
-				stmt.close();
-				LOG.info("Stats: Interval:" + x + ", Queries:" + u + ", Read:" + r + ", Write:" + w + ", Nodes:" + m);
-			}
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			connection = DriverManager.getConnection(Utilities.getStatsUrl(c.getTpcw().writeQueue),
+					c.getTpcw().username, c.getTpcw().password);
+			connection.setAutoCommit(true);
+			stmt = connection.createStatement();
+			StatsQuery stats = new StatsQuery(x, u, r, w, m);
+			stmt.executeUpdate(stats.getQueryStr());
+			LOG.info("Stats: Interval:" + x + ", Queries:" + u + ", Read:" + r + ", Write:" + w + ", Nodes:" + m);
 		} catch (Exception e) {
 			LOG.error(e.toString());
-		}
-	}
-
-	public synchronized void close() {
-		try {
-			con.close();
-		} catch (Exception e) {
-			LOG.error(e.toString());
+		} finally {
+			if (stmt != null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			if (connection != null)
+				try {
+					connection.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
 		}
 	}
 
