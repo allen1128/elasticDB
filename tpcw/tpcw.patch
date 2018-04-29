@@ -1,5 +1,5 @@
 diff --git a/build.xml b/build.xml
-index cdb54da..8592bb1 100644
+index cdb54da..f557cf5 100644
 --- a/build.xml
 +++ b/build.xml
 @@ -73,11 +73,6 @@
@@ -28,7 +28,7 @@ index cdb54da..8592bb1 100644
  	<!-- Installation -->
  	<target name="inst" depends="dist" description="Copy war file to desired directory.">
 -		<delete file="${webappDir}/tpcw.war"/>
-+		<delete includeEmptyDirs="true">
++		<delete includeEmptyDirs="true" failonerror="false">
 +                	<fileset dir="${webappDir}/tpcw"> 
 +    				<include name = "**" />
 +                	</fileset>
