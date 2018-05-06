@@ -1,4 +1,6 @@
-
+.DS_Store
+tpcw/.DS_Store
+tpcw/WebContent/
 .metadata
 bin/
 tmp/

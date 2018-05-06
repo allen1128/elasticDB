@@ -19,7 +19,8 @@ public class ScaleInRule {
 		String[] details = tokens[0].split(":");
 		return !details[3].equals("NA")
 				&& (Double.parseDouble(details[3]) < 200 && Double
-						.parseDouble(details[3]) > 0);
+						.parseDouble(details[3]) > 0)
+				&& c.getLoadBalancer().getReadQueue().size() > 3;
 	}
 
 	@Action

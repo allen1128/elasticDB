@@ -2,16 +2,21 @@ package com.bittiger.client;
 
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
+import java.rmi.ConnectException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.easyrules.api.RulesEngine;
+import org.easyrules.core.RulesEngineBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bittiger.logic.LoadBalancer;
 import com.bittiger.logic.Server;
+import com.bittiger.logic.rules.AvailRule;
+import com.bittiger.logic.rules.ScaleInRule;
 import com.bittiger.querypool.QueryMetaData;
 
 public class UserSession extends Thread {
@@ -108,17 +113,49 @@ public class UserSession extends Thread {
 	}
 
 	public Connection getNextReadConnection(LoadBalancer loadBalancer) {
+		Server server = null;
+		Connection connection = null;
 		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			Server server = loadBalancer.getNextReadServer();
-			Connection connection = (Connection) DriverManager.getConnection(
-					Utilities.getUrl(server), client.getTpcw().username,
-					client.getTpcw().password);
-			connection.setAutoCommit(true);
-			return connection;
+			do {
+				Class.forName("com.mysql.jdbc.Driver").newInstance();
+				server = loadBalancer.getNextReadServer();
+				connection = tryConnect(loadBalancer, server);
+				if (connection != null) {
+					connection.setAutoCommit(true);
+				}
+			} while (connection == null && !loadBalancer.getReadQueue().isEmpty());
+
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
+
+		return connection;
+
+	}
+
+	public Connection tryConnect(LoadBalancer loadBalancer, Server server) {
+		int count = 0;
+		Connection connection = null;
+		
+		while (true) {
+			try {
+				connection = (Connection) DriverManager.getConnection(Utilities.getUrl(server),
+						client.getTpcw().username, client.getTpcw().password);
+				break;
+			} catch (Exception ex) {
+				count++;
+				if (count > 3) {
+					loadBalancer.detectReadServerFailure(server);
+					RulesEngine rulesEngine = RulesEngineBuilder.aNewRulesEngine().build();
+					AvailRule availRule = new AvailRule();
+					availRule.setInput(client, loadBalancer.getReadQueue().size());			
+					rulesEngine.registerRule(availRule);
+					rulesEngine.fireRules();
+					break;
+				}
+			}
+		}
+		return connection;
 	}
 
 	public void run() {

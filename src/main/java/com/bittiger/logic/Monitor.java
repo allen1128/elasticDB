@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import org.slf4j.Logger;
@@ -61,7 +64,7 @@ public class Monitor {
 		}
 	}
 
-	private void updateStats(double x, double u, double r, double w, double m) {
+	private void updateStats(double x, double u, double r_u, double r, double w, double m) {
 		Connection connection = null;
 		Statement stmt = null;
 		try {
@@ -70,9 +73,10 @@ public class Monitor {
 					c.getTpcw().username, c.getTpcw().password);
 			connection.setAutoCommit(true);
 			stmt = connection.createStatement();
-			StatsQuery stats = new StatsQuery(x, u, r, w, m);
+			StatsQuery stats = new StatsQuery(x, u, r_u, r, w, m);
 			stmt.executeUpdate(stats.getQueryStr());
-			LOG.info("Stats: Interval:" + x + ", Queries:" + u + ", Read:" + r + ", Write:" + w + ", Nodes:" + m);
+			LOG.info("Stats: Interval:" + x + ", Queries:" + u + ", Read Quries:" + r_u + ", Write Queries: "
+					+ (u - r_u) + ", Read:" + r + ", Write:" + w + ", Nodes:" + m);
 		} catch (Exception e) {
 			LOG.error(e.toString());
 		} finally {
@@ -152,8 +156,7 @@ public class Monitor {
 			perf.append(":NA");
 		}
 		totCount += count;
-		updateStats(seq++, totCount, avgRead, avgWrite, c.getLoadBalancer().getReadQueue().size());
+		updateStats(seq++, totCount, totCount - count, avgRead, avgWrite, c.getLoadBalancer().getReadQueue().size());
 		return perf.toString();
 	}
-
 }

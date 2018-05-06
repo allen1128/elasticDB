@@ -20,6 +20,7 @@ public class ScaleOutRule {
 		return !details[3].equals("NA")
 				&& (Double.parseDouble(details[3]) > 400);
 	}
+	
 
 	@Action
 	public void addServer() throws Exception {
@@ -30,5 +31,4 @@ public class ScaleOutRule {
 		this.c = c;
 		this.perf = perf;
 	}
-
 }

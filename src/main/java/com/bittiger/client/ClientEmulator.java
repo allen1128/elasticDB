@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.bittiger.logic.ActionType;
 import com.bittiger.logic.Controller;
+import com.bittiger.logic.Destroyer;
 import com.bittiger.logic.EventQueue;
 import com.bittiger.logic.Executor;
 import com.bittiger.logic.LoadBalancer;
@@ -25,6 +26,10 @@ public class ClientEmulator {
 
 	@Option(name = "-c", usage = "enable controller")
 	private boolean enableController;
+	
+	@Option(name = "-d", usage = "enable availability")
+	private boolean enableAvailability;
+	
 	// receives other command line parameters than options
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
@@ -57,6 +62,7 @@ public class ClientEmulator {
 	private LoadBalancer loadBalancer;
 	OpenSystemTicketProducer producer;
 	EventQueue eventQueue = null;
+	private Destroyer destroyer;
 
 	private static transient final Logger LOG = LoggerFactory.getLogger(ClientEmulator.class);
 
@@ -95,8 +101,13 @@ public class ClientEmulator {
 			return;
 		}
 
-		if (enableController)
+		if (enableController) {
 			LOG.info("-c flag is set");
+		}
+		if (enableAvailability) {
+			LOG.info("-d flag is set");
+		}
+			
 
 		long warmup = tpcw.warmup;
 		long mi = tpcw.mi;
@@ -130,6 +141,7 @@ public class ClientEmulator {
 			producer = new OpenSystemTicketProducer(this, bQueue);
 			producer.start();
 		}
+		
 
 		this.monitor = new Monitor(this);
 		this.monitor.init();
@@ -140,7 +152,15 @@ public class ClientEmulator {
 			timer.schedule(this.controller, warmup, tpcw.interval);
 			this.executor = new Executor(this);
 			this.executor.start();
+		}		
+		
+		
+
+		if (tpcw.destroyerSleepInterval > 0 && !tpcw.destroyTarget.isEmpty()){
+			destroyer = new Destroyer(this, tpcw.destroyerSleepInterval, tpcw.destroyTarget);
+			destroyer.start();
 		}
+		
 		this.loadBalancer = new LoadBalancer(this);
 		LOG.info("Client starts......");
 		this.startTime = System.currentTimeMillis();
@@ -170,6 +190,7 @@ public class ClientEmulator {
 			} catch (InterruptedException ie) {
 				LOG.error("ERROR:InterruptedException" + ie.toString());
 			}
+			
 			currNumSessions = workloads[currWLInx];
 			currWLInx = ((currWLInx + 1) % workloads.length);
 		}

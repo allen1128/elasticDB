@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bittiger.client.ClientEmulator;
+import com.bittiger.logic.rules.AvailRule;
 import com.bittiger.logic.rules.ScaleInRule;
 import com.bittiger.logic.rules.ScaleOutRule;
 
@@ -33,6 +34,7 @@ public class Controller extends TimerTask {
 			scaleOutRule.setInput(c, perf);
 			ScaleInRule scaleInRule = new ScaleInRule();
 			scaleInRule.setInput(c, perf);
+			
 			rulesEngine.registerRule(scaleOutRule);
 			rulesEngine.registerRule(scaleInRule);
 			rulesEngine.fireRules();

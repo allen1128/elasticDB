@@ -30,7 +30,7 @@ public class Executor extends Thread {
 			}
 			try {
 				LOG.info(actionType + " request received");
-				if (actionType == ActionType.BadPerformanceAddServer) {
+				if (actionType == ActionType.BadPerformanceAddServer || actionType == ActionType.AvailNotEnoughAddServer) {
 					if (c.getLoadBalancer().getCandidateQueue().size() == 0) {
 						LOG.info("CandidateQueue size is 0, skip adding server");
 					} else {
@@ -71,3 +71,4 @@ public class Executor extends Thread {
 	}
 
 }
+ 

@@ -50,4 +50,8 @@ public class Utilities {
 		p.waitFor();
 		return true;
 	}
+	
+	public static boolean stopServer(String target) throws InterruptedException, IOException {
+		return scaleIn(target);
+	}
 }

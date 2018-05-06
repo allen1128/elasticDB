@@ -12,6 +12,7 @@ public class LoadBalancer {
 	private List<Server> readQueue = new ArrayList<Server>();
 	private Server writeQueue = null;
 	private List<Server> candidateQueue = new ArrayList<Server>();
+	private List<Server> failureServerQueue = new ArrayList<Server>();
 	private int nextReadServer = 0;
 	private static transient final Logger LOG = LoggerFactory
 			.getLogger(LoadBalancer.class);
@@ -57,5 +58,10 @@ public class LoadBalancer {
 	public List<Server> getCandidateQueue() {
 		return candidateQueue;
 	}
-
+	
+	public synchronized void detectReadServerFailure(Server server){
+		LOG.warn("server failure detected for {}; moving it from read queue to failure queue", server.getIp());
+		readQueue.remove(server);
+		failureServerQueue.add(server);
+	}
 }

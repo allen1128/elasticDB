@@ -3,10 +3,11 @@ package com.bittiger.querypool;
 import java.util.StringTokenizer;
 
 public class StatsQuery {
-	public StatsQuery(double x, double u, double r, double w, double m) {
+	public StatsQuery(double x, double u, double u_r, double r, double w, double m) {
 		super();
 		this.x = x;
 		this.u = u;
+		this.u_r = u_r;
 		this.r = r;
 		this.w = w;
 		this.m = m;
@@ -14,11 +15,12 @@ public class StatsQuery {
 
 	double x;
 	double u;
+	double u_r;
 	double r;
 	double w;
 	double m;
 
-	public String query = "insert into datapoints values" + "(?,?,?,?,?)";
+	public String query = "insert into datapoints values" + "(?,?,?,?,?,?)";
 
 	public String getQueryStr() {
 		String qString = "";
@@ -35,15 +37,18 @@ public class StatsQuery {
 				qString += u;
 				break;
 			case 3:
-				qString += r;
+				qString += u_r;
 				break;
 			case 4:
-				qString += w;
+				qString += r;
 				break;
 			case 5:
-				qString += m;
+				qString += w;
 				break;
 			case 6:
+				qString += m;
+				break;
+			case 7:
 				break;
 			default:
 				System.out.println("More token than expected");
