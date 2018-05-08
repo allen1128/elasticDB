@@ -154,11 +154,11 @@ public class ClientEmulator {
 			this.executor.start();
 		}		
 		
-		
-
-		if (tpcw.destroyerSleepInterval > 0 && !tpcw.destroyTarget.isEmpty()){
-			destroyer = new Destroyer(this, tpcw.destroyerSleepInterval, tpcw.destroyTarget);
-			destroyer.start();
+		if (enableAvailability) {
+			if (tpcw.destroyerSleepInterval > 0 && !tpcw.destroyTarget.isEmpty()){
+				destroyer = new Destroyer(this, tpcw.destroyerSleepInterval, tpcw.destroyTarget);
+				destroyer.start();
+			}
 		}
 		
 		this.loadBalancer = new LoadBalancer(this);
@@ -276,6 +276,10 @@ public class ClientEmulator {
 
 	public void setEventQueue(EventQueue eventQueue) {
 		this.eventQueue = eventQueue;
+	}
+	
+	public boolean isEnableAvailability(){
+		return enableAvailability;
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {

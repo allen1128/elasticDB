@@ -14,7 +14,7 @@ public class AvailRule {
 	
 	@Condition
 	public boolean checkAvailability() {
-		return avail < 3;
+		return c.isEnableAvailability() && avail < 3;
 	}
 
 	@Action
