@@ -38,6 +38,7 @@ public class TPCWProperties {
 
 	public int destroyerSleepInterval;
 	public String destroyTarget;
+	public String loadBalancerType;
 
 	private static transient final Logger LOG = LoggerFactory.getLogger(TPCWProperties.class);
 
@@ -64,6 +65,7 @@ public class TPCWProperties {
 			warmdown = Long.parseLong(getProperty("warmdown"));
 			mi = Long.parseLong(getProperty("mi"));
 			interval = Long.parseLong(getProperty("interval"));
+			loadBalancerType = getProperty("loadBalancerType");
 
 			StringTokenizer rl = null;
 			int rlCnt = 0;
